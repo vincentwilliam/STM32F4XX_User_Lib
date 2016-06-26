@@ -53,6 +53,8 @@ int main(void)
 {
   GPIO_InitTypeDef GPIO_InitStructure;
  
+	SPI_InitTypeDef SPI1_InitStructure;
+	SPI_InitTypeDef SPI2_InitStructure;
   /*!< At this stage the microcontroller clock setting is already configured, 
        this is done through SystemInit() function which is called from startup
        files before to branch to application main.
@@ -66,38 +68,47 @@ int main(void)
   /* Add your application code here */
   /* Insert 50 ms delay */
   Delay(5);
+	
+	SPI1_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256 ;
+	SPI1_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+	SPI1_InitStructure.SPI_CPOL = SPI_CPOL_High;
+//	SPI1_InitStructure.SPI_CRCPolynomial = 
+	SPI1_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+	SPI
+	
   
   /* Output HSE clock on MCO1 pin(PA8) ****************************************/ 
   /* Enable the GPIOA peripheral */ 
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
   
   /* Configure MCO1 pin(PA8) in alternate function */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;  
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+//  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+//  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+//  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+//  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;  
+//  GPIO_Init(GPIOA, &GPIO_InitStructure);
     
-  /* HSE clock selected to output on MCO1 pin(PA8)*/
-  RCC_MCO1Config(RCC_MCO1Source_HSE, RCC_MCO1Div_1);
+//  /* HSE clock selected to output on MCO1 pin(PA8)*/
+//  RCC_MCO1Config(RCC_MCO1Source_HSE, RCC_MCO1Div_1);
   
   
   /* Output SYSCLK/4 clock on MCO2 pin(PC9) ***********************************/ 
   /* Enable the GPIOACperipheral */ 
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+//  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+//  
+//  /* Configure MCO2 pin(PC9) in alternate function */
+//  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+//  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+//  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+//  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;  
+//  GPIO_Init(GPIOC, &GPIO_InitStructure);
+//    
+//  /* SYSCLK/4 clock selected to output on MCO2 pin(PC9)*/
+//  RCC_MCO2Config(RCC_MCO2Source_SYSCLK, RCC_MCO2Div_4);
   
-  /* Configure MCO2 pin(PC9) in alternate function */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;  
-  GPIO_Init(GPIOC, &GPIO_InitStructure);
-    
-  /* SYSCLK/4 clock selected to output on MCO2 pin(PC9)*/
-  RCC_MCO2Config(RCC_MCO2Source_SYSCLK, RCC_MCO2Div_4);
-  
+	
      
   /* Infinite loop */
   while (1)

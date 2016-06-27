@@ -39,6 +39,13 @@
 static __IO uint32_t uwTimingDelay;
 RCC_ClocksTypeDef RCC_Clocks;
 
+uint16_t Prescaler = 84;
+uint32_t Period = 20000;
+uint32_t PulseValue1 = 0;     // Channel1 Duty Cycle %0  = (0/20000)*100
+uint32_t PulseValue2 = 50000; // Channel2 Duty Cycle %25 = (5000/20000)*100
+uint32_t PulseValue3 = 10000; // Channel1 Duty Cycle %50 = (10000/20000)*100
+uint32_t PulseValue4 = 15000; // Channel1 Duty Cycle %75 = (15000/20000)*100
+
 /* Private function prototypes -----------------------------------------------*/
 static void Delay(__IO uint32_t nTime);
 
@@ -52,7 +59,83 @@ uint8_t SPI2_Send(uint8_t data)
 	return SPI2->DR;
 }
 
+void PWM_Pin_Config(void)
+{
+		GPIO_InitTypeDef GPIO_InitStructure;
 
+    /* Enable clock for TIM4 */
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+
+    /* GPIOD and GPIOB clock enable */
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+
+    /* GPIOC Configuration: TIM3 CH1 (PC6) and TIM3 CH2 (PC7) TIM3 CH3 (PC8) and TIM3 CH4 (PC9)*/
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9 ;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+
+    /* Connect TIM3 pins to AF2 */
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_TIM3);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource7, GPIO_AF_TIM3);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource8, GPIO_AF_TIM3);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource9, GPIO_AF_TIM3);
+}
+
+void Timer3_PWM_Output_Config(uint32_t PeriodValue, uint16_t PrescalerValue)
+{
+
+    TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+
+    /* Time base configuration */
+    TIM_TimeBaseStructure.TIM_Period = PeriodValue - 1;
+    TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue - 1;
+    TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+    TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
+
+    /* PWM1 Mode configuration */
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+
+    /* PWM1 Mode configuration: Channel1 */
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_Pulse = PulseValue1;
+
+    TIM_OC1Init(TIM3, &TIM_OCInitStructure);
+    TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
+
+    /* PWM1 Mode configuration: Channel2 */
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_Pulse = PulseValue2;
+
+    TIM_OC2Init(TIM3, &TIM_OCInitStructure);
+    TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
+
+    /* PWM1 Mode configuration: Channel3 */
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_Pulse = PulseValue3;
+
+    TIM_OC3Init(TIM3, &TIM_OCInitStructure);
+    TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Enable);
+
+    /* PWM1 Mode configuration: Channel4 */
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_Pulse = PulseValue4;
+
+    TIM_OC4Init(TIM3, &TIM_OCInitStructure);
+    TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
+
+    TIM_ARRPreloadConfig(TIM3, ENABLE);
+
+    /* TIM3 enable counter */
+    TIM_Cmd(TIM3, ENABLE);
+
+}
 /**
   * @brief  Main program
   * @param  None
@@ -115,16 +198,8 @@ int main(void)
 //  /* SYSCLK/4 clock selected to output on MCO2 pin(PC9)*/
 //  RCC_MCO2Config(RCC_MCO2Source_SYSCLK, RCC_MCO2Div_4);
   
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4 ;
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
-	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
-//	SPI1_InitStructure.SPI_CRCPolynomial = 
-	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft | SPI_NSSInternalSoft_Set;
-	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_4;
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_4;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_OType =GPIO_OType_PP;
@@ -148,6 +223,17 @@ int main(void)
 	
 	GPIO_PinAFConfig(GPIOI, GPIO_PinSource1, GPIO_AF_SPI2);
 	GPIO_PinAFConfig(GPIOI, GPIO_PinSource3, GPIO_AF_SPI2);
+	
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4 ;
+	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
+	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
+//	SPI1_InitStructure.SPI_CRCPolynomial = 
+	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
+	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft | SPI_NSSInternalSoft_Set;
+	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
+	
+
   
 	SPI_Init(SPI1, &SPI_InitStructure);
 	SPI_Init(SPI2, &SPI_InitStructure);
@@ -155,6 +241,8 @@ int main(void)
 	SPI_Cmd(SPI2, ENABLE);
 
 		 
+	PWM_Pin_Config();
+  Timer3_PWM_Output_Config(Period, Prescaler);	 
   /* Infinite loop */
   while (1)
   {

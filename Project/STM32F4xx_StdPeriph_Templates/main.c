@@ -43,6 +43,15 @@ RCC_ClocksTypeDef RCC_Clocks;
 static void Delay(__IO uint32_t nTime);
 
 /* Private functions ---------------------------------------------------------*/
+uint8_t SPI2_Send(uint8_t data)
+{
+	SPI2->DR = data;
+	while( !(SPI2->SR & SPI_I2S_FLAG_TXE) );
+	while( !(SPI2->SR & SPI_I2S_FLAG_RXNE) );
+	while( SPI2->SR & SPI_I2S_FLAG_BSY );
+	return SPI2->DR;
+}
+
 
 /**
   * @brief  Main program
@@ -53,8 +62,11 @@ int main(void)
 {
   GPIO_InitTypeDef GPIO_InitStructure;
  
-	SPI_InitTypeDef SPI1_InitStructure;
-	SPI_InitTypeDef SPI2_InitStructure;
+	SPI_InitTypeDef SPI_InitStructure;
+	
+	
+	uint8_t recieved_val = 0;
+	
   /*!< At this stage the microcontroller clock setting is already configured, 
        this is done through SystemInit() function which is called from startup
        files before to branch to application main.
@@ -69,14 +81,9 @@ int main(void)
   /* Insert 50 ms delay */
   Delay(5);
 	
-	SPI1_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256 ;
-	SPI1_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
-	SPI1_InitStructure.SPI_CPOL = SPI_CPOL_High;
-//	SPI1_InitStructure.SPI_CRCPolynomial = 
-	SPI1_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-	SPI
 	
-  
+	
+	
   /* Output HSE clock on MCO1 pin(PA8) ****************************************/ 
   /* Enable the GPIOA peripheral */ 
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
@@ -108,11 +115,50 @@ int main(void)
 //  /* SYSCLK/4 clock selected to output on MCO2 pin(PC9)*/
 //  RCC_MCO2Config(RCC_MCO2Source_SYSCLK, RCC_MCO2Div_4);
   
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4 ;
+	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
+	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
+//	SPI1_InitStructure.SPI_CRCPolynomial = 
+	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
+	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft | SPI_NSSInternalSoft_Set;
+	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	
-     
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_4;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType =GPIO_OType_PP;
+	
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	
+	
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType =GPIO_OType_PP;
+	
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_3;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType =GPIO_OType_PP;
+	
+	GPIO_Init(GPIOI, &GPIO_InitStructure);
+	
+	GPIO_PinAFConfig(GPIOI, GPIO_PinSource1, GPIO_AF_SPI2);
+	GPIO_PinAFConfig(GPIOI, GPIO_PinSource3, GPIO_AF_SPI2);
+  
+	SPI_Init(SPI1, &SPI_InitStructure);
+	SPI_Init(SPI2, &SPI_InitStructure);
+	
+	SPI_Cmd(SPI2, ENABLE);
+
+		 
   /* Infinite loop */
   while (1)
   {
+//		SPI2_Send(0XAA);
   }
 }
 
